@@ -7,57 +7,35 @@ html, body {
     height: 100%;
     margin: 0px;
 }
-
-.image {
-    background: url(./wall.jpg) no-repeat center center fixed;
-    -webkit-background-size: contain;
-    -moz-background-size: contain;
-    -o-background-size: contain;
-    background-size: contain;
-    width: 100%;
-    height: 100%;
-}
-
-.image.large {
-    transform: scale(2);
-}
         </style>
-
-        <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 
         <title>
             The magic climbing wall
         </title>
     </head>
     <body>
-        <div class="image">
+        <div class="zoom">
+			<img id="wall" src="./wall.jpg"/>
         </div>
+
+<!-- from https://github.com/ironexdev/zoom -->
+<script src="./zoom-by-ironex.min.js"></script>
+<script type="text/javascript">
+
+wall = document.getElementById("wall");
+wall_height = wall.naturalHeight;
+wall_width = wall.naturalWidth;
+
+// Need to recompute this when the window is resized
+window_height = window.innerHeight;
+window_width = window.innerWidth;
+
+min_scale = Math.min(window_height / wall_height , window_width / wall_width);
+zoom({}, {
+	scaleMax: 5,
+	scaleMin: min_scale
+});
+
+</script>
     </body>
-    <script>
-
-const position = { x: 0, y: 0 }
-
-interact(".image").gesturable({
-    onmove: function(event) {
-        var scale = event.scale;
-        console.log("new scale "+scale);
-    } }).on('doubletap', function (event) {
-        event.currentTarget.classList.toggle('large');
-        console.log("detected doubletap");
-        event.preventDefault();
-    }).draggable({
-        listeners: {
-            start (event) {
-                console.log(event.type, event.target);
-            },
-            move (event) {
-                position.x += event.dx;
-                position.y += event.dy;
-
-                event.target.style.backgroundPosition =
-                    `${position.x}px ${position.y}px`;
-            },
-        }
-    });
-    </script>
 </html>
