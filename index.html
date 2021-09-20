@@ -13,11 +13,7 @@ html, body {
     width: 100%;
     border: 1px;
     border-style: solid;
-    display: flex;
-    justify-content: center;
 }
-
-#wall {
 
         </style>
 
@@ -31,14 +27,36 @@ html, body {
         </div>
 
 <!-- from https://github.com/ironexdev/zoom -->
-<script src="./zoom-by-ironex.min.js"></script>
+<script src="./zoom.js"></script>
 <script type="text/javascript">
 
+var wall = document.getElementById("wall");
+var wall_height = wall.naturalHeight;
+var wall_width = wall.naturalWidth;
+console.log("Size of wall is "+wall_width+" x "+wall_height);
 
-zoom({}, {
-    scaleMax: 5,
-    scaleMin: 1
+window.addEventListener("load", function () {
+    recalculate_max_zoom();
 });
+
+window.addEventListener("resize", function () {
+    recalculate_max_zoom();
+});
+
+function recalculate_max_zoom() {
+    // Need to recompute this when the window is resized
+    var window_height = window.innerHeight;
+    var window_width = window.innerWidth;
+
+    console.log("Size of window is "+window_width+" x "+window_height);
+
+    var min_scale = Math.max(window_height / wall_height , window_width / wall_width);
+    zoom({}, {
+        scaleMax: 5,
+        scaleMin: min_scale
+    });
+    console.log("zoom from "+min_scale);
+}
 
 </script>
     </body>

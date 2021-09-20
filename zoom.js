@@ -78,8 +78,8 @@ function zoom(classNames, settings, callback) {
   var initialPointerOffsetX2;
   var initialPointerOffsetY;
   var initialPointerOffsetY2;
-  var limitOffsetX;
-  var limitOffsetY;
+  var limitOffsetX_min, limitOffsetX_max;
+  var limitOffsetY_min, limitOffsetY_max;
   var mousemoveCount = 0;
   var offset;
   var pinchOffsetX;
@@ -105,9 +105,7 @@ function zoom(classNames, settings, callback) {
     $element = $container.children[0];
 
     /* Set attributes */
-    $element.setAttribute(_dataScale, 1);
-    $element.setAttribute(_dataTranslateX, 0);
-    $element.setAttribute(_dataTranslateY, 0);
+    moveScaleElement($element, 0, 0, minMax(1, SCALE_MIN, SCALE_MAX));
   }
 
   window.addEventListener("load", function () {
@@ -138,21 +136,16 @@ function zoom(classNames, settings, callback) {
         initialOffsetX = parseFloat($element.getAttribute(_dataTranslateX));
         initialOffsetY = parseFloat($element.getAttribute(_dataTranslateY));
         targetScale = SCALE_DEFAULT;
-        limitOffsetX = getLimitOffset(elementWidth, containerWidth, targetScale);
-        limitOffsetY = getLimitOffset(elementHeight, containerHeight, targetScale);
-        targetOffsetX = (elementWidth * targetScale) > containerWidth ? minMax(initialOffsetX, limitOffsetX * (-1), limitOffsetX) : 0;
-        targetOffsetY = (elementHeight * targetScale) > containerHeight ? minMax(initialOffsetY, limitOffsetY * (-1), limitOffsetY) : 0;
+        [limitOffsetX_min, limitOffsetX_max] = getLimitOffset(elementWidth, containerWidth, targetScale);
+        [limitOffsetY_min, limitOffsetY_max] = getLimitOffset(elementHeight, containerHeight, targetScale);
+        targetOffsetX = minMax(initialOffsetX, limitOffsetX_min, limitOffsetX_max);
+        targetOffsetY = minMax(initialOffsetY, limitOffsetY_min, limitOffsetY_max);
 
         if (targetScale === 1) {
           zoomInactive($container);
         }
 
-        /* Set attributes */
-        $element.setAttribute(_dataScale, targetScale);
-        $element.setAttribute(_dataTranslateX, targetOffsetX);
-        $element.setAttribute(_dataTranslateY, targetOffsetY);
-
-        moveScaleElement($element, targetOffsetX + "px", targetOffsetY + "px", targetScale);
+        moveScaleElement($element, targetOffsetX, targetOffsetY, targetScale);
       }
     });
   });
@@ -215,14 +208,10 @@ function zoom(classNames, settings, callback) {
       addClass($element, _transition);
 
       if (hasClass($container, _active) === true) {
-        /* Set attributes */
-        $element.setAttribute(_dataScale, 1);
-        $element.setAttribute(_dataTranslateX, 0);
-        $element.setAttribute(_dataTranslateY, 0);
-
         zoomInactive($container);
 
-        moveScaleElement($element, 0, 0, 1);
+        /* Set attributes */
+        moveScaleElement($element, 0, 0, minMax(1, SCALE_MIN, SCALE_MAX));
       } else {
         pointerOffsetX = e.clientX;
         pointerOffsetY = e.clientY;
@@ -231,26 +220,17 @@ function zoom(classNames, settings, callback) {
         scaleDifference = (SCALE_DEFAULT - 1) * scaleDirection;
 
         /* Set offset limits */
-        limitOffsetX = getLimitOffset(elementWidth, containerWidth, targetScale);
-        limitOffsetY = getLimitOffset(elementHeight, containerHeight, targetScale);
+        [limitOffsetX_min, limitOffsetX_max] = getLimitOffset(elementWidth, containerWidth, targetScale);
+        [limitOffsetY_min, limitOffsetY_max] = getLimitOffset(elementHeight, containerHeight, targetScale);
 
-        if (targetScale <= 1) {
-          targetOffsetX = 0;
-          targetOffsetY = 0;
-        } else {
-          /* Set target offsets */
-          targetOffsetX = (elementWidth * targetScale) <= containerWidth ? 0 : minMax(initialOffsetX - ((((((pointerOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX * (-1), limitOffsetX);
-          targetOffsetY = (elementHeight * targetScale) <= containerHeight ? 0 : minMax(initialOffsetY - ((((((pointerOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY * (-1), limitOffsetY);
-        }
+        /* Set target offsets */
+        targetOffsetX = minMax(initialOffsetX - ((((((pointerOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX_min, limitOffsetX_max);
+        targetOffsetY = minMax(initialOffsetY - ((((((pointerOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY_min, limitOffsetY_max);
 
         zoomActive($container);
 
         /* Set attributes */
-        $element.setAttribute(_dataScale, targetScale);
-        $element.setAttribute(_dataTranslateX, targetOffsetX);
-        $element.setAttribute(_dataTranslateY, targetOffsetY);
-
-        moveScaleElement($element, targetOffsetX + "px", targetOffsetY + "px", SCALE_DEFAULT);
+        moveScaleElement($element, targetOffsetX, targetOffsetY, SCALE_DEFAULT);
       }
 
       setTimeout(function () {
@@ -288,28 +268,14 @@ function zoom(classNames, settings, callback) {
     pointerOffsetX = e.clientX;
     pointerOffsetY = e.clientY;
     targetScale = initialScale;
-    limitOffsetX = getLimitOffset(elementWidth, containerWidth, targetScale);
-    limitOffsetY = getLimitOffset(elementHeight, containerHeight, targetScale);
-    targetOffsetX = (elementWidth * targetScale) <= containerWidth ? 0 : minMax(pointerOffsetX - (initialPointerOffsetX - initialOffsetX), limitOffsetX * (-1), limitOffsetX);
-    targetOffsetY = (elementHeight * targetScale) <= containerHeight ? 0 : minMax(pointerOffsetY - (initialPointerOffsetY - initialOffsetY), limitOffsetY * (-1), limitOffsetY);
+    [limitOffsetX_min, limitOffsetX_max] = getLimitOffset(elementWidth, containerWidth, targetScale);
+    [limitOffsetY_min, limitOffsetY_max] = getLimitOffset(elementHeight, containerHeight, targetScale);
+    targetOffsetX = minMax(pointerOffsetX - (initialPointerOffsetX - initialOffsetX), limitOffsetX_min, limitOffsetX_max);
+    targetOffsetY = minMax(pointerOffsetY - (initialPointerOffsetY - initialOffsetY), limitOffsetY_min, limitOffsetY_max);
     mousemoveCount++;
 
-    if (Math.abs(targetOffsetX) === Math.abs(limitOffsetX)) {
-      initialOffsetX = targetOffsetX;
-      initialPointerOffsetX = pointerOffsetX;
-    }
-
-    if (Math.abs(targetOffsetY) === Math.abs(limitOffsetY)) {
-      initialOffsetY = targetOffsetY;
-      initialPointerOffsetY = pointerOffsetY;
-    }
-
     /* Set attributes */
-    $element.setAttribute(_dataScale, targetScale);
-    $element.setAttribute(_dataTranslateX, targetOffsetX);
-    $element.setAttribute(_dataTranslateY, targetOffsetY);
-
-    moveScaleElement($element, targetOffsetX + "px", targetOffsetY + "px", targetScale);
+    moveScaleElement($element, targetOffsetX, targetOffsetY, targetScale);
   }
 
   function mouseUp() {
@@ -359,14 +325,10 @@ function zoom(classNames, settings, callback) {
         addClass($element, _transition);
 
         if (hasClass($container, _active) === true) {
-          /* Set attributes */
-          $element.setAttribute(_dataScale, 1);
-          $element.setAttribute(_dataTranslateX, 0);
-          $element.setAttribute(_dataTranslateY, 0);
-
           zoomInactive($container);
 
-          moveScaleElement($element, 0, 0, 1);
+          /* Set attributes */
+          moveScaleElement($element, 0, 0, minMax(1, SCALE_MIN, SCALE_MAX));
         } else {
           pointerOffsetX = e.touches[0].clientX;
           pointerOffsetY = e.touches[0].clientY;
@@ -375,26 +337,22 @@ function zoom(classNames, settings, callback) {
           scaleDifference = (SCALE_DEFAULT - 1) * scaleDirection;
 
           /* Set offset limits */
-          limitOffsetX = getLimitOffset(elementWidth, containerWidth, targetScale);
-          limitOffsetY = getLimitOffset(elementHeight, containerHeight, targetScale);
+          [limitOffsetX_min, limitOffsetX_max] = getLimitOffset(elementWidth, containerWidth, targetScale);
+          [limitOffsetY_min, limitOffsetY_max] = getLimitOffset(elementHeight, containerHeight, targetScale);
 
           if (targetScale <= 1) {
             targetOffsetX = 0;
             targetOffsetY = 0;
           } else {
             /* Set target offsets */
-            targetOffsetX = (elementWidth * targetScale) <= containerWidth ? 0 : minMax(initialOffsetX - ((((((pointerOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX * (-1), limitOffsetX);
-            targetOffsetY = (elementHeight * targetScale) <= containerHeight ? 0 : minMax(initialOffsetY - ((((((pointerOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY * (-1), limitOffsetY);
+            targetOffsetX = minMax(initialOffsetX - ((((((pointerOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX_min, limitOffsetX_max);
+            targetOffsetY = minMax(initialOffsetY - ((((((pointerOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY_min, limitOffsetY_max);
           }
 
           zoomActive($container);
 
           /* Set attributes */
-          $element.setAttribute(_dataScale, targetScale);
-          $element.setAttribute(_dataTranslateX, targetOffsetX);
-          $element.setAttribute(_dataTranslateY, targetOffsetY);
-
-          moveScaleElement($element, targetOffsetX + "px", targetOffsetY + "px", SCALE_DEFAULT);
+          moveScaleElement($element, targetOffsetX, targetOffsetY, SCALE_DEFAULT);
         }
 
         setTimeout(function () {
@@ -450,11 +408,11 @@ function zoom(classNames, settings, callback) {
       if (Math.abs(initialPinchDistance - targetPinchDistance) >= 1) {
         /* Initialize helpers */
         targetScale = minMax(targetPinchDistance / initialPinchDistance * initialScale, SCALE_MIN, SCALE_MAX);
-        limitOffsetX = getLimitOffset(elementWidth, containerWidth, targetScale);
-        limitOffsetY = getLimitOffset(elementHeight, containerHeight, targetScale);
+        [limitOffsetX_min, limitOffsetX_max] = getLimitOffset(elementWidth, containerWidth, targetScale);
+        [limitOffsetY_min, limitOffsetY_max] = getLimitOffset(elementHeight, containerHeight, targetScale);
         scaleDifference = targetScale - initialScale;
-        targetOffsetX = (elementWidth * targetScale) <= containerWidth ? 0 : minMax(initialOffsetX - ((((((pinchOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX * (-1), limitOffsetX);
-        targetOffsetY = (elementHeight * targetScale) <= containerHeight ? 0 : minMax(initialOffsetY - ((((((pinchOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY * (-1), limitOffsetY);
+        targetOffsetX = minMax(initialOffsetX - ((((((pinchOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX_min, limitOffsetX_max);
+        targetOffsetY = minMax(initialOffsetY - ((((((pinchOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY_min, limitOffsetY_max);
 
         if (targetScale > 1) {
           zoomActive($container);
@@ -462,7 +420,7 @@ function zoom(classNames, settings, callback) {
           zoomInactive($container);
         }
 
-        moveScaleElement($element, targetOffsetX + "px", targetOffsetY + "px", targetScale);
+        moveScaleElement($element, targetOffsetX, targetOffsetY, targetScale);
 
         /* Initialize helpers */
         initialPinchDistance = targetPinchDistance;
@@ -473,27 +431,13 @@ function zoom(classNames, settings, callback) {
     } else /* Single touch */ {
       /* Initialize helpers */
       targetScale = initialScale;
-      limitOffsetX = getLimitOffset(elementWidth, containerWidth, targetScale);
-      limitOffsetY = getLimitOffset(elementHeight, containerHeight, targetScale);
-      targetOffsetX = (elementWidth * targetScale) <= containerWidth ? 0 : minMax(pointerOffsetX - (initialPointerOffsetX - initialOffsetX), limitOffsetX * (-1), limitOffsetX);
-      targetOffsetY = (elementHeight * targetScale) <= containerHeight ? 0 : minMax(pointerOffsetY - (initialPointerOffsetY - initialOffsetY), limitOffsetY * (-1), limitOffsetY);
-
-      if (Math.abs(targetOffsetX) === Math.abs(limitOffsetX)) {
-        initialOffsetX = targetOffsetX;
-        initialPointerOffsetX = pointerOffsetX;
-      }
-
-      if (Math.abs(targetOffsetY) === Math.abs(limitOffsetY)) {
-        initialOffsetY = targetOffsetY;
-        initialPointerOffsetY = pointerOffsetY;
-      }
+      [limitOffsetX_min, limitOffsetX_max] = getLimitOffset(elementWidth, containerWidth, targetScale);
+      [limitOffsetY_min, limitOffsetY_max] = getLimitOffset(elementHeight, containerHeight, targetScale);
+      targetOffsetX = minMax(pointerOffsetX - (initialPointerOffsetX - initialOffsetX), limitOffsetX_min, limitOffsetX_max);
+      targetOffsetY = minMax(pointerOffsetY - (initialPointerOffsetY - initialOffsetY), limitOffsetY_min, limitOffsetY_max);
 
       /* Set attributes */
-      $element.setAttribute(_dataScale, initialScale);
-      $element.setAttribute(_dataTranslateX, targetOffsetX);
-      $element.setAttribute(_dataTranslateY, targetOffsetY);
-
-      moveScaleElement($element, targetOffsetX + "px", targetOffsetY + "px", targetScale);
+      moveScaleElement($element, targetOffsetX, targetOffsetY, targetScale);
     }
   }
 
@@ -548,17 +492,12 @@ function zoom(classNames, settings, callback) {
     }
 
     /* Set offset limits */
-    limitOffsetX = getLimitOffset(elementWidth, containerWidth, targetScale);
-    limitOffsetY = getLimitOffset(elementHeight, containerHeight, targetScale);
+    [limitOffsetX_min, limitOffsetX_max] = getLimitOffset(elementWidth, containerWidth, targetScale);
+    [limitOffsetY_min, limitOffsetY_max] = getLimitOffset(elementHeight, containerHeight, targetScale);
 
-    if (targetScale <= 1) {
-      targetOffsetX = 0;
-      targetOffsetY = 0;
-    } else {
-      /* Set target offsets */
-      targetOffsetX = (elementWidth * targetScale) <= containerWidth ? 0 : minMax(initialOffsetX - ((((((pointerOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX * (-1), limitOffsetX);
-      targetOffsetY = (elementHeight * targetScale) <= containerHeight ? 0 : minMax(initialOffsetY - ((((((pointerOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY * (-1), limitOffsetY);
-    }
+    /* Set target offsets */
+    targetOffsetX = minMax(initialOffsetX - ((((((pointerOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX_min, limitOffsetX_max);
+    targetOffsetY = minMax(initialOffsetY - ((((((pointerOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY_min, limitOffsetY_max);
 
     if (targetScale > 1) {
       zoomActive($container);
@@ -567,11 +506,7 @@ function zoom(classNames, settings, callback) {
     }
 
     /* Set attributes */
-    $element.setAttribute(_dataScale, targetScale);
-    $element.setAttribute(_dataTranslateX, targetOffsetX);
-    $element.setAttribute(_dataTranslateY, targetOffsetY);
-
-    moveScaleElement($element, targetOffsetX + "px", targetOffsetY + "px", targetScale);
+    moveScaleElement($element, targetOffsetX, targetOffsetY, targetScale);
   }
 
   function addClass($element, targetClass) {
@@ -631,17 +566,21 @@ function zoom(classNames, settings, callback) {
   }
 
   function moveScaleElement($element, targetOffsetX, targetOffsetY, targetScale) {
+
+      /* Set attributes */
+      $element.setAttribute(_dataScale, targetScale);
+      $element.setAttribute(_dataTranslateX, targetOffsetX);
+      $element.setAttribute(_dataTranslateY, targetOffsetY);
+
+    var new_style = "-moz-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) " + "scale(" + targetScale + "); " +
+        "-ms-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) scale(" + targetScale + "); " +
+        "-o-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) " + "scale(" + targetScale + "); " +
+        "-webkit-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) " + "scale(" + targetScale + "); ";
     if (SUPPORT_3D_TRANSFORM) {
-      $element.style.cssText = "-moz-transform : translate(" + targetOffsetX + ", " + targetOffsetY + ") " + "scale(" + targetScale + "); " +
-        "-ms-transform : translate(" + targetOffsetX + ", " + targetOffsetY + ") scale(" + targetScale + "); " +
-        "-o-transform : translate(" + targetOffsetX + ", " + targetOffsetY + ") " + "scale(" + targetScale + "); " +
-        "-webkit-transform : translate(" + targetOffsetX + ", " + targetOffsetY + ") " + "scale(" + targetScale + "); " +
+      $element.style.cssText = new_style +
         "transform : translate3d(" + targetOffsetX + ", " + targetOffsetY + ", 0) scale3d(" + targetScale + ", " + targetScale + ", 1);";
     } else {
-      $element.style.cssText = "-moz-transform : translate(" + targetOffsetX + ", " + targetOffsetY + ") " + "scale(" + targetScale + "); " +
-        "-ms-transform : translate(" + targetOffsetX + ", " + targetOffsetY + ") scale(" + targetScale + "); " +
-        "-o-transform : translate(" + targetOffsetX + ", " + targetOffsetY + ") " + "scale(" + targetScale + "); " +
-        "-webkit-transform : translate(" + targetOffsetX + ", " + targetOffsetY + ") " + "scale(" + targetScale + "); " +
+      $element.style.cssText = new_style +
         "transform : translate(" + targetOffsetX + ", " + targetOffsetY + ") scale(" + targetScale + ", " + targetScale + ")";
     }
   }
@@ -677,7 +616,15 @@ function zoom(classNames, settings, callback) {
   }
 
   function getLimitOffset(elementDimension, containerDimension, targetScale) {
-    return ((elementDimension * targetScale) - containerDimension) / 2;
+    //return ((elementDimension * targetScale) - containerDimension) / 2;
+
+    var max_change = Math.abs((elementDimension * targetScale) - containerDimension) / 2;
+    var offset = (containerDimension - elementDimension) / 2;
+
+    var min_offset = offset - max_change;
+    var max_offset = offset + max_change;
+
+    return [min_offset, max_offset];
   }
 
   function zoomActive($container) {
