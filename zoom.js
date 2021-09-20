@@ -486,9 +486,10 @@ function zoom(classNames, settings, callback) {
     scaleDifference = SCALE_DIFFERENCE * scaleDirection;
     targetScale = initialScale + scaleDifference;
 
-    /* Prevent scale overflow */
-    if (targetScale < SCALE_MIN || targetScale > SCALE_MAX) {
-      return false;
+    targetScale = minMax(targetScale, SCALE_MIN, SCALE_MAX);
+    // if we are already at the limit of scaling
+    if (targetScale == initialScale) {
+        return false;
     }
 
     /* Set offset limits */
