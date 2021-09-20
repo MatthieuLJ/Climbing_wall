@@ -9,10 +9,25 @@ html, body {
 }
 
 .zoom {
+    /*
+    position: absolute;
+    left: 30px;
+    top: 30px;
+    height: 80%;
+    width: 80%;
+        */
     height: 100%;
     width: 100%;
     border: 1px;
     border-style: solid;
+}
+
+.zoom-transition{
+    transition: -moz-transform ease 200ms;
+    transition: -ms-transform ease 200ms;
+    transition: -o-transform ease 200ms;
+    transition: -webkit-transform ease 200ms;
+    transition: transform ease 200ms;
 }
 
         </style>
@@ -53,7 +68,8 @@ function recalculate_max_zoom() {
     var min_scale = Math.max(window_height / wall_height , window_width / wall_width);
     zoom({}, {
         scaleMax: 5,
-        scaleMin: min_scale
+        scaleMin: min_scale,
+        scaleDifference: 0.1, // Used on wheel zoom
     });
     console.log("zoom from "+min_scale);
 }
