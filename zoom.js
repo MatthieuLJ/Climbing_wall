@@ -340,14 +340,9 @@ function zoom(classNames, settings, callback) {
           [limitOffsetX_min, limitOffsetX_max] = getLimitOffset(elementWidth, containerWidth, targetScale);
           [limitOffsetY_min, limitOffsetY_max] = getLimitOffset(elementHeight, containerHeight, targetScale);
 
-          if (targetScale <= 1) {
-            targetOffsetX = 0;
-            targetOffsetY = 0;
-          } else {
-            /* Set target offsets */
-            targetOffsetX = minMax(initialOffsetX - ((((((pointerOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX_min, limitOffsetX_max);
-            targetOffsetY = minMax(initialOffsetY - ((((((pointerOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY_min, limitOffsetY_max);
-          }
+          /* Set target offsets */
+          targetOffsetX = minMax(initialOffsetX - ((((((pointerOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX_min, limitOffsetX_max);
+          targetOffsetY = minMax(initialOffsetY - ((((((pointerOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY_min, limitOffsetY_max);
 
           zoomActive($container);
 
