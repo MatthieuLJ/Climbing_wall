@@ -250,7 +250,7 @@ function zoom(classNames, settings, callback) {
     containerOffsetX = offset.left;
     containerOffsetY = offset.top;
     containerHeight = $container.clientHeight;
-    containerWidth = $container.clientWidth
+    containerWidth = $container.clientWidth;
     elementHeight = $element.clientHeight;
     elementWidth = $element.clientWidth;
     initialOffsetX = parseFloat($element.getAttribute(_dataTranslateX));
@@ -290,8 +290,6 @@ function zoom(classNames, settings, callback) {
     /* Unset capture */
     capture = false;
   }
-
-
 
   function touchStart(e) {
     preventDefault();
@@ -396,9 +394,9 @@ function zoom(classNames, settings, callback) {
         targetOffsetX = minMax(initialOffsetX - ((((((pinchOffsetX - containerOffsetX) - (containerWidth / 2)) - initialOffsetX) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetX_min, limitOffsetX_max);
         targetOffsetY = minMax(initialOffsetY - ((((((pinchOffsetY - containerOffsetY) - (containerHeight / 2)) - initialOffsetY) / (targetScale - scaleDifference))) * scaleDifference), limitOffsetY_min, limitOffsetY_max);
 
-        move_and_zoom($container, $element, pointerOffsetX, pointerOffsetY, targetScale)
+        move_and_zoom($container, $element, pointerOffsetX, pointerOffsetY, targetScale);
 
-        if (targetScale > 1) {
+        if (targetScale != 1) {
           zoomActive($container);
         } else {
           zoomInactive($container);
@@ -417,7 +415,7 @@ function zoom(classNames, settings, callback) {
       targetOffsetY = minMax(pointerOffsetY - (initialPointerOffsetY - initialOffsetY), limitOffsetY_min, limitOffsetY_max);
 
 
-      move_and_zoom($container, $element, pointerOffsetX, pointerOffsetY, targetScale)
+      move_and_zoom($container, $element, pointerOffsetX, pointerOffsetY, targetScale);
     }
   }
 
@@ -461,10 +459,10 @@ function zoom(classNames, settings, callback) {
 
     // if we are already at the limit of scaling
     if (targetScale == initialScale) {
-        return false;
+      return false;
     }
 
-    move_and_zoom($container, $element, pointerOffsetX, pointerOffsetY, targetScale)
+    move_and_zoom($container, $element, pointerOffsetX, pointerOffsetY, targetScale);
 
     if (targetScale != 1) {
       zoomActive($container);
@@ -530,18 +528,17 @@ function zoom(classNames, settings, callback) {
   }
 
   function moveScaleElement($element, targetOffsetX, targetOffsetY, targetScale) {
+    /* Set attributes */
+    $element.setAttribute(_dataScale, targetScale);
+    $element.setAttribute(_dataTranslateX, targetOffsetX);
+    $element.setAttribute(_dataTranslateY, targetOffsetY);
 
-      /* Set attributes */
-      $element.setAttribute(_dataScale, targetScale);
-      $element.setAttribute(_dataTranslateX, targetOffsetX);
-      $element.setAttribute(_dataTranslateY, targetOffsetY);
-
-      $element.style.cssText = "-moz-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) " + "scale(" + targetScale + "); " +
-        "-ms-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) scale(" + targetScale + "); " +
-        "-o-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) " + "scale(" + targetScale + "); " +
-        "-webkit-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) " + "scale(" + targetScale + "); " +
-        "transform : translate" + (SUPPORT_3D_TRANSFORM ? "3d" : "") + "(" + targetOffsetX + ", " + targetOffsetY + ", 0) " +
-        "scale3d(" + targetScale + ", " + targetScale + ", 1);";
+    $element.style.cssText = "-moz-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) " + "scale(" + targetScale + "); " +
+      "-ms-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) scale(" + targetScale + "); " +
+      "-o-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) " + "scale(" + targetScale + "); " +
+      "-webkit-transform : translate(" + targetOffsetX + "px, " + targetOffsetY + "px) " + "scale(" + targetScale + "); " +
+      "transform : translate" + (SUPPORT_3D_TRANSFORM ? "3d" : "") + "(" + targetOffsetX + ", " + targetOffsetY + ", 0) " +
+      "scale3d(" + targetScale + ", " + targetScale + ", 1);";
   }
 
   function preventDefault(e) {
