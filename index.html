@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <!-- from https://github.com/ironexdev/zoom -->
+        <script src="./zoom.js"></script>
+        <script src="./jquery.minicolors.min.js"></script>
+        <link rel="stylesheet" href="./jquery.minicolors.css">
 
         <style>
 html, body {
@@ -9,13 +14,6 @@ html, body {
 }
 
 .zoom {
-    /*
-    position: absolute;
-    left: 30px;
-    top: 30px;
-    height: 80%;
-    width: 80%;
-        */
     height: 100%;
     width: 100%;
     border: 1px;
@@ -30,6 +28,29 @@ html, body {
     transition: transform ease 200ms;
 }
 
+#movable-color-picker {
+    position: absolute;
+    left: 50px;
+    top: 50px;
+}
+#color-picker-container {
+    position: relative;
+    padding-left: 1.25em;
+}
+
+#color-picker-container:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.25em;
+    width: 1em;
+    height: 0.15em;
+    background: white;
+    box-shadow: 
+        0 0.25em 0 0 white,
+        0 0.5em 0 0 white;
+}
+
         </style>
 
         <title>
@@ -41,17 +62,27 @@ html, body {
 			<img id="wall" src="./wall.jpg"/>
         </div>
 
-<!-- from https://github.com/ironexdev/zoom -->
-<script src="./zoom.js"></script>
+        <div id="movable-color-picker">
+            <div id="color-picker-container">
+                <input type="text" id="color-picker" value="#abcdef">
+            </div>
+        </div>
+
 <script type="text/javascript">
 
 var wall = document.getElementById("wall");
 var wall_height = wall.naturalHeight;
 var wall_width = wall.naturalWidth;
-console.log("Size of wall is "+wall_width+" x "+wall_height);
 
 window.addEventListener("load", function () {
     recalculate_max_zoom();
+
+    $("#color-picker").minicolors({
+        control: "wheel",
+        inline: true,
+        opacity: false,
+        swatches: ["#ef9a9a","#90caf9","#a5d6a7","#fff59d","#ffcc80","#bcaaa4","#eeeeee","#f44336","#2196f3","#4caf50","#ffeb3b","#ff9800","#795548","#9e9e9e"],
+    });
 });
 
 window.addEventListener("resize", function () {
@@ -63,17 +94,15 @@ function recalculate_max_zoom() {
     var window_height = window.innerHeight;
     var window_width = window.innerWidth;
 
-    console.log("Size of window is "+window_width+" x "+window_height);
-
     var min_scale = Math.max(window_height / wall_height , window_width / wall_width);
     zoom({}, {
         scaleMax: 5,
         scaleMin: min_scale,
         scaleDifference: 0.1, // Used on wheel zoom
     });
-    console.log("zoom from "+min_scale);
 }
 
 </script>
+
     </body>
 </html>
