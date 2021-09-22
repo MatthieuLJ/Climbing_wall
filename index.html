@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
         <!-- from https://github.com/ironexdev/zoom -->
         <script src="./zoom.js"></script>
         <script src="./jquery.minicolors.min.js"></script>
@@ -44,6 +47,7 @@ html, body {
     left: 50px;
     top: 50px;
 }
+
 #color-picker-container {
     position: relative;
     padding-left: 1.25em;
@@ -96,9 +100,11 @@ window.addEventListener("load", function () {
     });
 });
 
-window.addEventListener("resize", function () {
+$(window).on('resize', function () {
     recalculate_max_zoom();
 });
+
+$("#movable-color-picker").draggable();
 
 function recalculate_max_zoom() {
     // Need to recompute this when the window is resized
