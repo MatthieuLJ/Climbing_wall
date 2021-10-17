@@ -19,7 +19,7 @@
   }));
 */
 
-function zoom(classNames, settings, callback) {
+function zoom(classNames, settings, callback, click_callback) {
   /* Settings */
   classNames = (typeof (classNames) !== "undefined" && Object.keys(classNames).length ? classNames : {});
   settings = (typeof (settings) !== "undefined" && Object.keys(settings).length ? settings : {});
@@ -64,6 +64,7 @@ function zoom(classNames, settings, callback) {
   /* Helpers */
   var capture = false;
   var doubleClickMonitor = [null];
+  var clickMonitor = false;
   var containerHeight;
   var containerWidth;
   var containerOffsetX;
@@ -219,6 +220,7 @@ function zoom(classNames, settings, callback) {
         doubleClickMonitor = [null];
       }, DOUBLECLICK_DELAY);
     } else if (doubleClickMonitor[0] === e.target && mousemoveCount <= 5 && isWithinRange(initialPointerOffsetX, doubleClickMonitor[1] - 10, doubleClickMonitor[1] + 10) === true && isWithinRange(initialPointerOffsetY, doubleClickMonitor[2] - 10, doubleClickMonitor[2] + 10) === true) {
+      clickMonitor = false;
       addClass($element, _transition);
 
       pointerOffsetX = e.clientX;
@@ -282,10 +284,23 @@ function zoom(classNames, settings, callback) {
     moveScaleElement($element, targetOffsetX, targetOffsetY, targetScale);
   }
 
-  function mouseUp() {
+  function mouseUp(e) {
+    if (doubleClickMonitor[0] === e.target && mousemoveCount <= 5 && isWithinRange(initialPointerOffsetX, doubleClickMonitor[1] - 10, doubleClickMonitor[1] + 10) === true && isWithinRange(initialPointerOffsetY, doubleClickMonitor[2] - 10, doubleClickMonitor[2] + 10) === true) {
+        if (click_callback) {
+            clickMonitor = true;
+            setTimeout(function () {
+                if (clickMonitor) {
+                    click_callback(e.target, initialOffsetX, initialOffsetY);
+                    clickMonitor = false;
+                };
+            }, DOUBLECLICK_DELAY);
+        }
+    }
+
     if (touchable === true || capture === false) {
       return false;
     }
+
 
     /* Unset capture */
     capture = false;
