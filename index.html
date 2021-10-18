@@ -11,6 +11,7 @@
         <link rel="stylesheet" href="./jquery.minicolors.css">
 
         <style>
+
 html, body {
     height: 100%;
     margin: 0px;
@@ -23,11 +24,12 @@ html, body {
     position: absolute;
     left: 30px;
     top: 30px;
-        */
+    */
     height: 100%;
     width: 100%;
     border: 1px;
     border-style: solid;
+
     overflow: hidden;
 }
 
@@ -107,7 +109,7 @@ $(window).on('resize', function () {
 $("#movable-color-picker").draggable();
 
 function map_click(container, offsetX, offsetY) {
-    console.log("I've been clicked");
+    console.log("I've been clicked at "+offsetX+", "+offsetY);
 }
 
 function recalculate_max_zoom() {
