@@ -106,7 +106,9 @@ function zoom(classNames, settings, callback, click_callback) {
     $element = $container.children[0];
 
     /* Set attributes */
-    moveScaleElement($element, 0, 0, minMax(1, SCALE_MIN, SCALE_MAX));
+    targetScale = minMax(1, SCALE_MIN, SCALE_MAX);
+    initialScale = targetScale;
+    move_and_zoom($container, $element, 0, 0, targetScale);
   }
 
   window.addEventListener("load", function () {
@@ -150,7 +152,9 @@ function zoom(classNames, settings, callback, click_callback) {
     containerOffsetX = offset.left;
     containerOffsetY = offset.top;
     initialOffsetX = parseFloat($element.getAttribute(_dataTranslateX));
+    initialOffsetX = isNaN(initialOffsetX) ? 0 : initialOffsetX;
     initialOffsetY = parseFloat($element.getAttribute(_dataTranslateY));
+    initialOffsetY = isNaN(initialOffsetY) ? 0 : initialOffsetY;
     scaleDifference = targetScale - initialScale;
 
     /* Set offset limits */
@@ -287,10 +291,13 @@ function zoom(classNames, settings, callback, click_callback) {
   function mouseUp(e) {
     if (doubleClickMonitor[0] === e.target && mousemoveCount <= 5 && isWithinRange(initialPointerOffsetX, doubleClickMonitor[1] - 10, doubleClickMonitor[1] + 10) === true && isWithinRange(initialPointerOffsetY, doubleClickMonitor[2] - 10, doubleClickMonitor[2] + 10) === true) {
         if (click_callback) {
+            var locationX = (elementWidth / 2) - ((containerOffsetX + (elementWidth / 2) - initialPointerOffsetX + targetOffsetX) / targetScale);
+            var locationY = (elementHeight / 2) - ((containerOffsetY + (elementHeight / 2) - initialPointerOffsetY + targetOffsetY) / targetScale);
+
             clickMonitor = true;
             setTimeout(function () {
                 if (clickMonitor) {
-                    click_callback(e.target, initialOffsetX, initialOffsetY);
+                    click_callback(e.target, parseInt(locationX), parseInt(locationY));
                     clickMonitor = false;
                 };
             }, DOUBLECLICK_DELAY);
@@ -300,7 +307,6 @@ function zoom(classNames, settings, callback, click_callback) {
     if (touchable === true || capture === false) {
       return false;
     }
-
 
     /* Unset capture */
     capture = false;
@@ -428,7 +434,6 @@ function zoom(classNames, settings, callback, click_callback) {
       targetScale = initialScale;
       targetOffsetX = minMax(pointerOffsetX - (initialPointerOffsetX - initialOffsetX), limitOffsetX_min, limitOffsetX_max);
       targetOffsetY = minMax(pointerOffsetY - (initialPointerOffsetY - initialOffsetY), limitOffsetY_min, limitOffsetY_max);
-
 
       move_and_zoom($container, $element, pointerOffsetX, pointerOffsetY, targetScale);
     }
