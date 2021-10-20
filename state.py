@@ -1,0 +1,15 @@
+from enum import Enum
+
+class State(Enum):
+    INITIALIZING = -1
+    READY = 0
+
+    NO_WALL = 1
+    EMPTY_WALL = 2
+    CONFIGURING_WALL = 3
+    CREATING_ROUTE = 4
+    CUSTOM_LIGHTS = 5
+    LOADING_ROUTES = 6
+
+    CUSTOM_MODE_STARRY_NIGHT = 50
+    CUSTOM_MODE_MESSAGE = 51

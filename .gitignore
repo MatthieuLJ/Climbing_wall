@@ -1,3 +1,4 @@
 *.swp
 .vscode/
 *.db
+__pycache__/

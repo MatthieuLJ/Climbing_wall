@@ -6,9 +6,7 @@
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
         <!-- from https://github.com/ironexdev/zoom -->
-        <script src="./zoom.js"></script>
-        <script src="./jquery.minicolors.min.js"></script>
-        <link rel="stylesheet" href="./jquery.minicolors.css">
+        <script src="./static/zoom.js"></script>
 
         <style>
 
@@ -40,46 +38,18 @@ html, body {
     transition: -webkit-transform ease 200ms;
     transition: transform ease 200ms;
 }
-
-#movable-color-picker {
-    position: absolute;
-    left: 50px;
-    top: 50px;
-}
-
-#color-picker-container {
-    position: relative;
-    padding-left: 1.25em;
-}
-
-#color-picker-container:before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0.25em;
-    width: 1em;
-    height: 0.15em;
-    background: white;
-    box-shadow: 
-        0 0.25em 0 0 white,
-        0 0.5em 0 0 white;
-}
-
         </style>
 
         <title>
-            The magic climbing wall
+            Configuring the magic climbing wall
         </title>
     </head>
     <body>
+        <div id="instructions">
+            Please click or tap on the lighted hold
+        </div>
         <div class="zoom">
 			<img id="wall" src="./wall.jpg"/>
-        </div>
-
-        <div id="movable-color-picker">
-            <div id="color-picker-container">
-                <input type="text" id="color-picker" value="#abcdef">
-            </div>
         </div>
 
 <script type="text/javascript">
@@ -90,20 +60,11 @@ var wall_width = wall.naturalWidth;
 
 window.addEventListener("load", function () {
     recalculate_max_zoom();
-
-    $("#color-picker").minicolors({
-        control: "wheel",
-        inline: true,
-        opacity: false,
-        swatches: ["#ef9a9a","#90caf9","#a5d6a7","#fff59d","#ffcc80","#bcaaa4","#eeeeee","#f44336","#2196f3","#4caf50","#ffeb3b","#ff9800","#795548","#9e9e9e"],
-    });
 });
 
 $(window).on('resize', function () {
     recalculate_max_zoom();
 });
-
-$("#movable-color-picker").draggable();
 
 function map_click(container, offsetX, offsetY) {
     console.log("I've been clicked at "+offsetX+", "+offsetY);
