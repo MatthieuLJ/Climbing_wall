@@ -51,11 +51,10 @@ class NewWallHandler(tornado.web.RequestHandler):
 class WallUploadHandler(tornado.web.RequestHandler):
     def post(self):
         global current_state
-        print("uploading wall picture...")
         wall = self.request.files['wall'][0]
         extension = os.path.splitext(wall['filename'])[1]
         final_filename= "static/wall"+extension
-        
+
         with open(final_filename, 'wb') as output_file:
             output_file.write(wall['body'])
 
@@ -89,7 +88,7 @@ def main():
         
         if not os.path.exists(wall_image) or imghdr.what(wall_image) is None:
             current_state = State.NO_WALL
-        elif configuration.get_num_holds() == 0:
+        elif configuration.get_num_holds() is None or configuration.get_num_holds() == 0:
             current_state = State.EMPTY_WALL
         else:
             num_holds = configuration.get_num_holds()
