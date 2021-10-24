@@ -1,61 +1,82 @@
 import os
 import sqlite3
-import sys
+import tempfile
 
 from sqlite3 import Error
 
-from state import State
+
+db_filename = ""
 
 def create_db_tables(db_conn):
-    create_tables = ["""CREATE TABLE IF NOT EXISTS holds (
+    cursor = db_conn.cursor()
+
+    cursor.execute("""CREATE TABLE IF NOT EXISTS holds (
         id INTEGER PRIMARY KEY,
         x INTEGER,
         y INTEGER,
-        brightness INTEGER );""",
-
-        """CREATE TABLE IF NOT EXISTS info (
-        label TEXT PRIMARY KEY,
-        value TEXT );""",
-    ]
-    cursor = db_conn.cursor()
-    try:
-        for table in create_tables:
-            cursor.execute(table)
-    except Error as e:
-        print(e)
-        sys.exit(-1)
+        brightness INTEGER );""")
 
 def get_db_connection():
+    global db_filename
+
     # Initialize database
     try:
-        db_conn = sqlite3.connect("wall.db")
+        db_conn = sqlite3.connect(db_filename)
     except Error as e:
         print(e)
-        sys.exit(-1)
+        return None
 
     return db_conn
 
-def initialize_db():
+def create_database():
+    global db_filename
+
+    # get a random file name
+    db_file = tempfile.NamedTemporaryFile(suffix=".db", dir = os.getcwd(), delete=False)
+    db_filename = db_file.name
+    print(db_filename)
     db_conn = get_db_connection()
+    create_db_tables(db_conn)
+
+    return db_filename
+
+def initialize_db(filename):
+    global db_filename
+    db_filename = filename
+
+    db_conn = get_db_connection()
+    if db_conn is None:
+        return None
 
     cursor = db_conn.cursor()
     cursor.execute("SELECT * FROM sqlite_master WHERE type='table' AND name='holds';")
     if len(cursor.fetchall()) == 0:
         create_db_tables(db_conn)
 
-    cursor.execute("SELECT value FROM info WHERE label='wall_image';")
-    wall_image = cursor.fetchall()
-    if len(wall_image) == 0:
-        return State.NO_WALL
-    
-    wall_image = wall_image[0][0]
-    print("checking for file "+str(wall_image))
-    if not os.path.exists(wall_image):
-        # TODO: delete the DB entry
-        return State.NO_WALL
+def get_num_holds():
+    db_conn = get_db_connection()
+    cursor = db_conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM holds;")
+    num_holds = cursor.fetchall()
+    if len(num_holds) == 0:
+        return None
+    else:
+        return num_holds[0][0]
 
-    cursor.execute("SELECT * FROM holds;")
-    if len(cursor.fetchall()) == 0:
-        return State.EMPTY_WALL
+def set_hold_position(index, x, y):
+    db_conn = get_db_connection()
 
-    return State.READY
+    cursor = db_conn.cursor()
+    cursor.execute("INSERT OR REPLACE INTO holds VALUES(?,?,?,?);", (index,x,y,100))
+    db_conn.commit()
+
+def get_hold_position(index):
+    db_conn = get_db_connection()
+
+    cursor = db_conn.cursor()
+    cursor.execute("SELECT x,y FROM holds WHERE id=?;", (index,))
+    position = cursor.fetchall()
+    if len(position) == 0:
+        return None
+    else:
+        return position[0]

@@ -16,13 +16,6 @@ html, body {
 }
 
 .zoom {
-    /*
-    height: 80%;
-    width: 80%;
-    position: absolute;
-    left: 30px;
-    top: 30px;
-    */
     height: 100%;
     width: 100%;
     border: 1px;
@@ -46,10 +39,10 @@ html, body {
     </head>
     <body>
         <div id="instructions">
-            Please click or tap on the lighted hold
+            {{ instructions }}
         </div>
         <div class="zoom">
-			<img id="wall" src="./wall.jpg"/>
+			<img id="wall" src="{{ wall_image }}" />
         </div>
 
 <script type="text/javascript">
