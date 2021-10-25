@@ -1,0 +1,11 @@
+{% extends "wall_creation.html" %}
+
+{% block instructions %}
+How many climbing holds on this wall?
+<form action="/set_num_holds" method="post">
+<input type="text" name="num_holds"></input>
+<input type="submit" value="set" />
+</form>
+{% end %}
+
+

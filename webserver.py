@@ -25,6 +25,8 @@ class Application(tornado.web.Application):
             (r"/new_wall", NewWallHandler),
             (r"/upload_wall", WallUploadHandler),
             (r"/configure_wall", ConfigureWallHandler),
+            (r"/set_num_holds", SetNumHoldsHandler),
+            (r"/set_hold_coords", SetHoldCoordsHandler),
             (r"/", IndexHandler)
         ]
 
@@ -42,7 +44,12 @@ class IndexHandler(tornado.web.RequestHandler):
 
 class ConfigureWallHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("templates/wall_creation.html", wall_image=configuration.get_wall_file(), instructions = "How many holds?")
+        if current_state == State.EMPTY_WALL:
+            self.render("templates/wall_num_holds.html", wall_image=configuration.get_wall_file())
+        elif current_state == State.CONFIGURING_WALL:
+            self.render("templates/wall_set_holds.html", wall_image=configuration.get_wall_file())
+        else:
+            self.redirect("/")
 
 class NewWallHandler(tornado.web.RequestHandler):
     def get(self):
@@ -68,6 +75,26 @@ class WallUploadHandler(tornado.web.RequestHandler):
         current_state = State.EMPTY_WALL
 
         self.redirect("/configure_wall")
+
+class SetNumHoldsHandler(tornado.web.RequestHandler):
+    def post(self):
+        global current_state
+        if current_state == State.EMPTY_WALL:
+            # Check if we got a real number
+            num_holds = self.get_argument('num_holds')
+            if not num_holds.isdigit() or int(num_holds) == 0:
+                return self.render("templates/wall_num_holds.html", wall_image=configuration.get_wall_file())
+
+            configuration.set_num_holds(int(num_holds))
+            print("Set the number of holds to " + str(configuration.get_num_holds()))
+            current_state = State.CONFIGURING_WALL
+            return self.render("templates/wall_set_holds.html", wall_image=configuration.get_wall_file())
+        else:
+            return self.redirect("/")
+
+class SetHoldCoordsHandler(tornado.web.RequestHandler):
+    def post(self):
+        pass
 
 def main():
     global current_state

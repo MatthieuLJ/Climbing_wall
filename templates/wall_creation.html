@@ -6,7 +6,7 @@
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
         <!-- from https://github.com/ironexdev/zoom -->
-        <script src="./static/zoom.js"></script>
+        <script src="{{ static_url('zoom.js') }}"></script>
 
         <style>
 
@@ -44,7 +44,7 @@ html, body {
     </head>
     <body>
         <div id="instructions">
-            {{ instructions }}
+            {% block instructions %}{% end %}
         </div>
         <div class="zoom">
 			<img id="wall" src="{{ wall_image }}" />
@@ -52,9 +52,6 @@ html, body {
 
 <script type="text/javascript">
 
-var wall = document.getElementById("wall");
-var wall_height = wall.naturalHeight;
-var wall_width = wall.naturalWidth;
 
 window.addEventListener("load", function () {
     recalculate_max_zoom();
@@ -70,6 +67,10 @@ function map_click(container, offsetX, offsetY) {
 
 function recalculate_max_zoom() {
     // Need to recompute this when the window is resized
+    var wall = document.getElementById("wall");
+    var wall_height = wall.naturalHeight;
+    var wall_width = wall.naturalWidth;
+
     var window_height = window.innerHeight;
     var window_width = window.innerWidth;
 
