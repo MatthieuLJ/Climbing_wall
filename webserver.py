@@ -12,6 +12,7 @@ from tornado.options import define, options
 
 import configuration
 import database
+import lights
 from state import State
 
 define("port", default=8888, help="run on the given port", type=int)
@@ -35,11 +36,12 @@ class Application(tornado.web.Application):
 class IndexHandler(tornado.web.RequestHandler):
     def get(self):
         global current_state
+        print("current state: "+str(current_state))
         if current_state == State.INITIALIZING:
             return self.write_error(503)
         elif current_state == State.NO_WALL:
             return self.redirect("/new_wall")
-        elif current_state == State.EMPTY_WALL:
+        elif current_state == State.EMPTY_WALL or current_state == State.CONFIGURING_WALL:
             return self.redirect("/configure_wall")
 
 class ConfigureWallHandler(tornado.web.RequestHandler):
@@ -47,6 +49,7 @@ class ConfigureWallHandler(tornado.web.RequestHandler):
         if current_state == State.EMPTY_WALL:
             self.render("templates/wall_num_holds.html", wall_image=configuration.get_wall_file())
         elif current_state == State.CONFIGURING_WALL:
+            set_next_light_to_configure()
             self.render("templates/wall_set_holds.html", wall_image=configuration.get_wall_file())
         else:
             self.redirect("/")
@@ -86,15 +89,30 @@ class SetNumHoldsHandler(tornado.web.RequestHandler):
                 return self.render("templates/wall_num_holds.html", wall_image=configuration.get_wall_file())
 
             configuration.set_num_holds(int(num_holds))
+            lights.set_num_lights(num_holds)
             print("Set the number of holds to " + str(configuration.get_num_holds()))
             current_state = State.CONFIGURING_WALL
+            set_next_light_to_configure()
             return self.render("templates/wall_set_holds.html", wall_image=configuration.get_wall_file())
         else:
             return self.redirect("/")
 
 class SetHoldCoordsHandler(tornado.web.RequestHandler):
     def post(self):
-        pass
+        coord_x = self.get_argument('x')
+        coord_y = self.get_argument('y')
+        database.set_hold_position(database.get_minimum_index_unknown_light(), coord_x, coord_y)
+        if database.get_minimum_index_unknown_light() >= configuration.get_num_holds():
+            lights.clear_all()
+            return self.redirect("/")
+        else:
+            set_next_light_to_configure()
+            return self.finish()
+
+def set_next_light_to_configure():
+    lights.clear_all()
+    index = database.get_minimum_index_unknown_light()
+    lights.set_light(index, (255,255,255))
 
 def main():
     global current_state
@@ -119,11 +137,11 @@ def main():
             current_state = State.EMPTY_WALL
         else:
             num_holds = configuration.get_num_holds()
-            if database.get_num_holds() < num_holds:
+            lights.set_num_lights(num_holds)
+            if database.get_minimum_index_unknown_light() < num_holds:
                 current_state = State.CONFIGURING_WALL
             else:
                 current_state = State.READY
-
 
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(options.port)

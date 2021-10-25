@@ -64,10 +64,11 @@ def get_num_holds():
         return num_holds[0][0]
 
 def set_hold_position(index, x, y):
+    print("setting hold#"+str(index)+" at ("+str(x)+","+str(y))
     db_conn = get_db_connection()
 
     cursor = db_conn.cursor()
-    cursor.execute("INSERT OR REPLACE INTO holds VALUES(?,?,?,?);", (index,x,y,100))
+    cursor.execute("INSERT OR REPLACE INTO holds (id, x, y, brightness) VALUES(?,?,?,?);", (index,x,y,100))
     db_conn.commit()
 
 def get_hold_position(index):
@@ -80,3 +81,22 @@ def get_hold_position(index):
         return None
     else:
         return position[0]
+
+def get_minimum_index_unknown_light():
+    db_conn = get_db_connection()
+
+    cursor = db_conn.cursor()
+    cursor.execute("""SELECT min(unused) AS unused
+                    FROM (
+                        SELECT MIN(t1.id)+1 as unused
+                        FROM holds AS t1
+                        WHERE NOT EXISTS (SELECT * FROM holds AS t2 WHERE t2.id = t1.id+1)
+                        UNION
+                        SELECT 1
+                        WHERE NOT EXISTS (SELECT * FROM holds WHERE id = 1)
+                    ) AS subquery""")
+    index = cursor.fetchall()
+    if len(index) == 0:
+        return None
+    else:
+        return index[0][0]

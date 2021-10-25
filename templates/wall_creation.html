@@ -63,6 +63,7 @@ $(window).on('resize', function () {
 
 function map_click(container, offsetX, offsetY) {
     console.log("I've been clicked at "+offsetX+", "+offsetY);
+    {% block click_image %}{% end %}
 }
 
 function recalculate_max_zoom() {

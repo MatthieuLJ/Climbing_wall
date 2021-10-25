@@ -1,0 +1,9 @@
+{% extends "wall_creation.html" %}
+
+{% block instructions %}
+Click the lighted hold
+{% end %}
+
+{% block click_image %}
+ $.post("/set_hold_coords", {x: offsetX, y: offsetY})
+{% end %}

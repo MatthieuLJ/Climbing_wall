@@ -1,5 +1,4 @@
 
-# Use ":memory:" databases to test
 
 import database
 import os
@@ -18,7 +17,7 @@ def test_create_and_initialize_db():
     assert database.get_num_holds() == 0
 
     database.set_hold_position(0, 10, 10)
-    
+
     assert database.get_num_holds() == 1
 
     # Moving the database somewhere else
@@ -28,4 +27,34 @@ def test_create_and_initialize_db():
     database.initialize_db(new_file.name)
     assert database.get_num_holds() == 1
     os.remove(new_file.name)
-    
+
+
+def test_lowest_unused_index():
+    db_file = database.create_database()
+
+    db_conn = database.get_db_connection()
+    cursor = db_conn.cursor()
+
+    assert database.get_minimum_index_unknown_light() == 1
+
+    cursor.execute("INSERT INTO holds (id) VALUES (2)")
+    db_conn.commit()
+
+    assert database.get_minimum_index_unknown_light() == 1
+
+    cursor.execute("INSERT INTO holds (id) VALUES (3)")
+    db_conn.commit()
+
+    assert database.get_minimum_index_unknown_light() == 1
+
+    cursor.execute("INSERT INTO holds (id) VALUES (1)")
+    db_conn.commit()
+
+    assert database.get_minimum_index_unknown_light() == 4
+
+    cursor.execute("INSERT INTO holds (id) VALUES (5)")
+    db_conn.commit()
+
+    assert database.get_minimum_index_unknown_light() == 4
+
+    os.remove(db_file)
