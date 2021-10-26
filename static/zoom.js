@@ -169,25 +169,29 @@ function zoom(classNames, settings, callback, click_callback) {
     moveScaleElement($element, targetOffsetX, targetOffsetY, targetScale);
   }
 
+  if (document.body.getAttribute("zoom_event_installed") == null) {
+    document.addEventListener("mousemove", mouseMove);
+
+    document.addEventListener("mouseup", mouseUp);
+
+    document.addEventListener("touchstart", function () {
+      touchable = true;
+    });
+
+    document.addEventListener("touchmove", touchMove, {passive: false}); // Google Chrome - [Intervention] Unable to preventDefault inside passive event listener due to target being treated as passive.
+
+    document.addEventListener("touchend", touchEnd);
+
+    document.body.setAttribute("zoom_event_installed", true);
+  }
+
   massAddEventListener($zoom, "mousedown", mouseDown);
 
   massAddEventListener($zoom, "mouseenter", mouseEnter);
 
   massAddEventListener($zoom, "mouseleave", mouseLeave);
 
-  document.addEventListener("mousemove", mouseMove);
-
-  document.addEventListener("mouseup", mouseUp);
-
-  document.addEventListener("touchstart", function () {
-    touchable = true;
-  });
-
   massAddEventListener($zoom, "touchstart", touchStart);
-
-  document.addEventListener("touchmove", touchMove, {passive: false}); // Google Chrome - [Intervention] Unable to preventDefault inside passive event listener due to target being treated as passive.
-
-  document.addEventListener("touchend", touchEnd);
 
   massAddEventListener($zoom, "wheel", wheel);
 
@@ -533,7 +537,10 @@ function zoom(classNames, settings, callback, click_callback) {
     var useCapture = useCapture || false;
 
     for (var i = 0; i < $elements.length; i++) {
-      $elements[i].addEventListener(event, customFunction, useCapture);
+      if ($elements[i].getAttribute("zoom_event_"+event) == null) {
+        $elements[i].addEventListener(event, customFunction, useCapture);
+        $elements[i].setAttribute("zoom_event_"+event, true)
+      }
     }
   }
 
