@@ -5,5 +5,14 @@ Click the lighted hold
 {% end %}
 
 {% block click_image %}
- $.post("/set_hold_coords", {x: offsetX, y: offsetY})
+$.post( {
+    url: "/set_hold_coords",
+    data: {x: offsetX, y: offsetY},
+    success: function(msg) {
+        if (msg.redirect) {
+            console.log("redirecting to: " + msg.url);
+            window.location.href = msg.url;
+        }
+    }
+});
 {% end %}

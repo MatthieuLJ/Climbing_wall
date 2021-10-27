@@ -4,8 +4,23 @@
 How many climbing holds on this wall?
 <form action="/set_num_holds" method="post">
 <input type="text" name="num_holds"></input>
-<input type="submit" value="set" />
+<input type="button" onclick="send_num_holds(this.form)" value="Submit" />
 </form>
+
+<script language="javascript">
+    function send_num_holds(form) {
+        $.post( {
+            url: "/set_num_holds",
+            data: { num_holds: form.num_holds.value },
+            success: function(msg) {
+                if (msg.redirect) {
+                    console.log("redirecting to: " + msg.url);
+                    window.location.href = msg.url;
+                }
+            }
+        });
+    }
+</script>
 {% end %}
 
 

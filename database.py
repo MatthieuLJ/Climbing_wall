@@ -63,6 +63,11 @@ def get_num_holds():
     else:
         return num_holds[0][0]
 
+def clear_holds():
+    db_conn = get_db_connection()
+    cursor = db_conn.cursor()
+    cursor.execute("DELETE FROM holds;")
+
 def set_hold_position(index, x, y):
     print("setting hold#"+str(index)+" at ("+str(x)+","+str(y))
     db_conn = get_db_connection()

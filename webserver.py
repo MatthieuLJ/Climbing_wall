@@ -5,6 +5,7 @@ import tornado.options
 import tornado.web
 
 import imghdr
+import json
 
 import os.path
 
@@ -43,6 +44,8 @@ class IndexHandler(tornado.web.RequestHandler):
             return self.redirect("/new_wall")
         elif current_state == State.EMPTY_WALL or current_state == State.CONFIGURING_WALL:
             return self.redirect("/configure_wall")
+        elif current_state == State.READY:
+            return self.render("templates/top_menu.html")
 
 class ConfigureWallHandler(tornado.web.RequestHandler):
     def get(self):
@@ -82,32 +85,38 @@ class WallUploadHandler(tornado.web.RequestHandler):
 class SetNumHoldsHandler(tornado.web.RequestHandler):
     def post(self):
         global current_state
+        self.set_header("Content-Type", 'application/json')
+
         if current_state == State.EMPTY_WALL:
             # Check if we got a real number
             num_holds = self.get_argument('num_holds')
             if not num_holds.isdigit() or int(num_holds) == 0:
-                return self.render("templates/wall_num_holds.html", wall_image=configuration.get_wall_file())
+                return self.write(json.dumps({'redirect': False}))
 
             configuration.set_num_holds(int(num_holds))
-            lights.set_num_lights(num_holds)
+            lights.set_num_lights(int(num_holds))
+            database.clear_holds()
             print("Set the number of holds to " + str(configuration.get_num_holds()))
             current_state = State.CONFIGURING_WALL
-            set_next_light_to_configure()
-            return self.render("templates/wall_set_holds.html", wall_image=configuration.get_wall_file())
+            return self.write(json.dumps({'redirect': True, 'url': "/configure_wall"}))
         else:
-            return self.redirect("/")
+            return self.write(json.dumps({'redirect': True, 'url': "/"}))
 
 class SetHoldCoordsHandler(tornado.web.RequestHandler):
     def post(self):
+        global current_state
+        self.set_header("Content-Type", 'application/json')
+
         coord_x = self.get_argument('x')
         coord_y = self.get_argument('y')
         database.set_hold_position(database.get_minimum_index_unknown_light(), coord_x, coord_y)
-        if database.get_minimum_index_unknown_light() >= configuration.get_num_holds():
+        if database.get_minimum_index_unknown_light() > configuration.get_num_holds():
             lights.clear_all()
-            return self.redirect("/")
+            current_state = State.READY
+            return self.write(json.dumps({'redirect': True, 'url': "/"}))
         else:
             set_next_light_to_configure()
-            return self.finish()
+            return self.write(json.dumps({'redirect': False}))
 
 def set_next_light_to_configure():
     lights.clear_all()
