@@ -2,14 +2,39 @@
 <html xmlns="http://www.w3.org/1999/xhtml"> 
 <head> 
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <title>Welcome to the magic climbing wall!</title>
 </head>
 <body>
 <h1>Welcome to your magic wall!</h1>
 <p>It looks like this is your first time and I don't know what your wall looks like. Please upload a picture of your climbing wall.</p>
-<form enctype="multipart/form-data" action="/upload_wall" method="post">
+<form enctype="multipart/form-data">
 File: <input type="file" name="wall" />
 <br />
 <br />
-<input type="submit" value="upload" />
+<input type="button" onclick="upload_wall(this.form)" value="upload" />
 </form>
+<div id="error"></div>
+
+<script language="javascript">
+function upload_wall(form) {
+    var formData = new FormData(form);
+
+    $.post( {
+        url: "/upload_wall",
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function(msg) {
+            if (msg.redirect) {
+                console.log("redirecting to: " + msg.url);
+                window.location.href = msg.url;
+            }
+            else if (msg.error) {
+                $("#error").text(msg.error);
+            }
+        }
+    });
+}
+
+</script>

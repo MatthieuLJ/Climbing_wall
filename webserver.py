@@ -64,6 +64,8 @@ class NewWallHandler(tornado.web.RequestHandler):
 class WallUploadHandler(tornado.web.RequestHandler):
     def post(self):
         global current_state
+        self.set_header("Content-Type", 'application/json')
+
         wall = self.request.files['wall'][0]
         extension = os.path.splitext(wall['filename'])[1]
         final_filename= "static/wall"+extension
@@ -74,13 +76,13 @@ class WallUploadHandler(tornado.web.RequestHandler):
         if imghdr.what(final_filename) is None:
             os.remove(final_filename)
             current_state = State.NO_WALL
-            self.finish("file" + final_filename + " is not a valid image")
-            return
+            print("This is not a valide image")
+            return self.write(json.dumps({'redirect': False, 'error': "this is not a valid image"}))
 
         configuration.set_wall_file(final_filename)
         current_state = State.EMPTY_WALL
 
-        self.redirect("/configure_wall")
+        return self.write(json.dumps({'redirect': True, 'url': "/configure_wall"}))
 
 class SetNumHoldsHandler(tornado.web.RequestHandler):
     def post(self):
