@@ -1,0 +1,35 @@
+{% extends "wall_creation.html" %}
+
+{% block instructions %}
+Click on some holds and name your route
+<form>
+    <input type="text" value="name"/>
+    <input type="button" value="submit" onclick="create_route(this.form)"/>
+</form>
+
+<script language="javascript">
+
+var selected_holds = []
+var holds_positions = {{ holds_positions }};
+var max_distance = {{ max_distance }};
+
+function create_route(form) {
+    $.post( {
+        url: "/create_route",
+        data: { num_holds: form.num_holds.value },
+        success: function(msg) {
+            if (msg.redirect) {
+                console.log("redirecting to: " + msg.url);
+                window.location.href = msg.url;
+            }
+        }
+    });
+}
+</script>
+{% end %}
+
+{% block click_image %}
+for(hold in holds_positions) {
+
+}
+{% end %}

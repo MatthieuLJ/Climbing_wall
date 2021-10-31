@@ -1,3 +1,4 @@
+import math
 import os
 import sqlite3
 import tempfile
@@ -105,3 +106,29 @@ def get_minimum_index_unknown_light():
         return None
     else:
         return index[0][0]
+
+def get_all_holds_positions():
+    db_conn = get_db_connection()
+
+    cursor = db_conn.cursor()
+    cursor.execute("""SELECT id,x,y FROM holds ORDER BY id ASC;""")
+    return list(map(lambda x: list(x), cursor.fetchall()))
+
+def get_shortest_distance():
+    holds = get_all_holds_positions()
+
+    if len(holds) <= 1:
+        return None
+
+    min_distance = math.sqrt(math.pow(holds[0][1] - holds[1][1],2) + math.pow(holds[0][2] - holds[1][2],2))
+
+    if len(holds) <= 2:
+        return min_distance
+
+    for a in range(len(holds)-1):
+        for b in range(a+1, len(holds)):
+            new_distance = math.sqrt(math.pow(holds[a][1] - holds[b][1],2) + math.pow(holds[a][2] - holds[b][2],2))
+            if new_distance < min_distance:
+                min_distance = new_distance
+
+    return min_distance

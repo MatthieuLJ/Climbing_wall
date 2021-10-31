@@ -13,7 +13,6 @@ def set_num_lights(num):
     if fake_lights:
         lights = [0] * num_lights
 
-
 def set_light(index, rgb):
     global num_lights, lights
     if index > num_lights or index <= 0:
